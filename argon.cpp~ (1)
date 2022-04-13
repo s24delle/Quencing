@@ -1,0 +1,109 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <TCanvas.h>
+#include <TRandom3.h>
+#include <TApplication.h>
+#include <TGraphErrors.h>
+#include <fstream>
+
+using namespace std;
+
+
+namespace dati{
+  double sigma = 3.4e-10;
+  double epsilon = 1;  
+  string a1,a2;
+  double b1,b2;
+}
+
+//FUNZIONI
+
+void readfile(string nomefile, int &n, vector<string>& at, vector<double>& X, vector<double>& Y, vector<double>& Z){
+
+
+    ifstream file(nomefile);
+    file >>n>>dati::a1>>dati::a2>>dati::b1>>dati::b2;
+    double x,y,z;
+    string Ar;
+  for(int i=0; i<n; i++){
+    file >> Ar >> x >> y >> z;
+    at.push_back(Ar);
+    X.push_back(x*pow(10,-10));    //converto i dati in sistema internazionale
+    Y.push_back(y*pow(10,-10));
+    Z.push_back(z*pow(10,-10));
+  }
+  file.close();
+}
+
+
+void writefile (string nomefile, int n, vector<string>& at, vector<double>& X, vector<double>& Y, vector<double>& Z){
+  ofstream file(nomefile);
+
+  file << n << endl;
+  file.precision(15);
+  file << dati::a1 << " "  <<    dati::a2 << " " <<  dati::b1 << " "   << dati::b2 << " "  << endl;
+  file.precision(10);
+								   
+  for(int i=0; i<n; i++){
+    file << at[i] << " " << X[i]*pow(10,10) << " " <<  Y[i]*pow(10,10) << " "   << Z[i]*pow(10,10) << " "<< endl;     //ho riconvertito i dati nel file di output in armstrong
+
+  }
+  file.close();
+}
+
+
+double energia(int n, vector<double>& X, vector<double>& Y, vector<double>& Z){
+  double E=0;
+  double r_ij;
+
+  for(int i=0; i<n-1; i++){
+    for(int j=i+1; j<n; j++){
+    r_ij = sqrt( pow(X[i] - X[j],2) +  pow(Y[i] - Y[j],2) +  pow(Z[i] - Z[j],2)  );
+    E = E + 4*dati::epsilon * ( pow(dati::sigma / r_ij ,12) - pow(dati::sigma / r_ij,6)  );
+    }
+  }
+  return E;
+}
+
+
+
+
+//MAIN
+
+int main(){
+
+  TApplication app("app",0,NULL);
+
+  
+
+  vector<double> rx;
+  vector<double> ry;
+  vector<double> rz;
+  vector<string> at;
+
+  int N;
+
+  readfile("ar38_to.xyz", N, at, rx, ry, rz);
+
+  writefile("output.xyz",N,at,rx,ry,rz);
+
+  double E;
+  E = energia(N, rx, ry, rz);
+  cout << E << endl;
+
+
+ //CALCOLO ENERGIA LJ
+
+  double U;
+  
+
+
+  
+
+																			
+  return 0;
+
+  app.Run(true);
+ 
+}
